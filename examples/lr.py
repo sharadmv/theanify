@@ -52,14 +52,27 @@ class LogisticRegression(TheanoBase):
     ])
     def gradients(self, X, y, learning_rate):
         cost = self.negative_log_likelihood(X, y)
-        g_W = T.grad(cost=cost, wrt=self.W)
+        g_W, g_b = T.grad(cost=cost, wrt=[self.W, self.b])
         g_b = T.grad(cost=cost, wrt=self.b)
         return (self.W - learning_rate * g_W, self.b - learning_rate * g_b)
+
+    def updates(self, X, y, learning_rate):
+        g_W, g_b = self.gradients(X, y, learning_rate)
+        return [(self.W, g_W), (self.b, g_b)]
+
+
+    @theano_optimize([
+        T.matrix('X'),
+        T.ivector('y'),
+        T.dscalar('learning_rate'),
+    ], updates=lambda self, *args: self.updates(*args))
+    def run(self, X, y, learning_rate):
+        return self.negative_log_likelihood(X, y)
+
 
 
 if __name__ == "__main__":
     from mldata import load
-    #X, y, _, _ = load('mnist', small=6)
     X, y, Xtest, ytest = load('mnist', subsample=0.5)
     print X.shape, y.shape
     X = X.astype(theano.config.floatX)
@@ -69,12 +82,7 @@ if __name__ == "__main__":
     lr = LogisticRegression(784, 10, learning_rate=0.001).compile()
 
     learning_rate = 0.5
-    def run(iterations, learning_rate=1.0):
-        for i in xrange(iterations):
-            dW, db = lr.gradients(X, y, learning_rate / (i + 1))
-            lr.W.set_value(dW)
-            lr.b.set_value(db)
-            print lr.negative_log_likelihood(X, y)
-
-    run(1000, 0.5)
+    iterations = 100
+    for i in xrange(iterations):
+        print lr.run(X, y, learning_rate / (i + 1))
     print lr.errors(Xtest, ytest)

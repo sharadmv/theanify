@@ -1,16 +1,17 @@
 import theano
 import theano.tensor as T
 
-def theano_optimize(vars):
+def theano_optimize(vars, updates=None):
     def func(f):
-        return PreTheano(f, vars)
+        return PreTheano(f, vars, updates)
     return func
 
 class PreTheano(object):
-    def __init__(self, f, args):
+    def __init__(self, f, args, updates):
         self.f = f
         self.args = args
         self.obj = None
+        self.updates = updates
 
     def set_instance(self, obj):
         self.obj = obj
@@ -32,9 +33,13 @@ class TheanoBase(object):
         for name in dir(self):
             obj = getattr(self, name)
             if isinstance(obj, PreTheano):
+                updates = None
+                if obj.updates:
+                    updates = obj.updates(self, *obj.args)
                 wut[name] = theano.function(
                     obj.args,
-                    obj(*obj.args)
+                    obj(*obj.args),
+                    updates=updates
                 )
             elif isinstance(obj, T.sharedvar.SharedVariable):
                 wut[name] = obj
