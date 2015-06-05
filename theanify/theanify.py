@@ -17,7 +17,7 @@ class PreTheano(object):
         self.obj = obj
 
     def __call__(self, *args):
-        assert self.obj is not None, "Make sure you call the TheanoBase constructor"
+        assert self.obj is not None, "Make sure you call the Theanifiable constructor"
         return self.f(self.obj, *args)
 
 class Theanifiable(object):
