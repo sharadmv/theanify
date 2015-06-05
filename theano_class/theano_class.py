@@ -51,25 +51,3 @@ class CompiledTheano(object):
     def __init__(self, funcs):
         for name, expr in funcs.items():
             setattr(self, name, expr)
-
-if __name__ == "__main__":
-    import theano.tensor as T
-    class Foo(TheanoBase):
-
-        @theano_optimize([
-            T.dvector(),
-            T.dvector()
-        ])
-        def sum(self, x, y):
-            return x + y
-
-        @theano_optimize([
-            T.dvector(),
-            T.dvector()
-        ])
-        def foo(self, x, y):
-            return self.sum(x, y) + x + y
-
-
-    f = Foo()
-    w = f.compile()

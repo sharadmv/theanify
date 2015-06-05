@@ -53,8 +53,7 @@ class LogisticRegression(TheanoBase):
 
 if __name__ == "__main__":
     from mldata import load
-    X, y, Xtest, ytest = load('mnist', subsample=0.1)
-    print X.shape, y.shape
+    X, y, Xtest, ytest = load('mnist', subsample=0.5)
     X = X.astype(theano.config.floatX)
     y = y.astype(np.int32)
     Xtest = Xtest.astype(theano.config.floatX)
