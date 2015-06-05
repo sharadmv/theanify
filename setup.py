@@ -4,7 +4,7 @@ from pip.req import parse_requirements
 import uuid
 
 setup(
-    name = "theano_class",
+    name = "theanify",
     version = "0.0.1",
     author = "Sharad Vikram",
     author_email = "sharad.vikram@gmail.com",
@@ -13,7 +13,7 @@ setup(
     keywords = "",
     url = "",
     packages=find_packages(include=[
-        'theano_class'
+        'theanify'
     ]),
     long_description="",
     classifiers=[

@@ -1,7 +1,7 @@
 import theano
 import theano.tensor as T
 
-def theano_optimize(*args, **kwargs):
+def theanify(*args, **kwargs):
     def func(f):
         return PreTheano(f, args, **kwargs)
     return func
@@ -20,7 +20,7 @@ class PreTheano(object):
         assert self.obj is not None, "Make sure you call the TheanoBase constructor"
         return self.f(self.obj, *args)
 
-class TheanoBase(object):
+class Theanifiable(object):
 
     def __init__(self):
         for name in dir(self):
