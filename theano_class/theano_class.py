@@ -1,13 +1,13 @@
 import theano
 import theano.tensor as T
 
-def theano_optimize(vars, updates=None):
+def theano_optimize(*args, **kwargs):
     def func(f):
-        return PreTheano(f, vars, updates)
+        return PreTheano(f, args, **kwargs)
     return func
 
 class PreTheano(object):
-    def __init__(self, f, args, updates):
+    def __init__(self, f, args, updates=None):
         self.f = f
         self.args = args
         self.obj = None
@@ -35,7 +35,7 @@ class TheanoBase(object):
             if isinstance(obj, PreTheano):
                 updates = None
                 if obj.updates:
-                    updates = obj.updates(self, *obj.args)
+                    updates = getattr(self, obj.updates)(*obj.args)
                 wut[name] = theano.function(
                     obj.args,
                     obj(*obj.args),
