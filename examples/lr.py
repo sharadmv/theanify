@@ -6,12 +6,11 @@ from theanify import theanify, Theanifiable
 
 class LogisticRegression(Theanifiable):
 
-    def __init__(self, D, C, learning_rate=0.1):
+    def __init__(self, n_input, n_output):
         super(LogisticRegression, self).__init__()
-        self.D, self.C = D, C
-        self.b = theano.shared(np.zeros(C))
-        self.W = theano.shared(np.zeros((D, C)))
-        self.learning_rate = learning_rate
+        self.n_input, self.n_output = n_input, n_output
+        self.b = theano.shared(np.zeros(n_output))
+        self.W = theano.shared(np.zeros((n_input, n_output)))
 
     @theanify(T.matrix('X'), T.ivector('y'))
     def negative_log_likelihood(self, X, y):
@@ -58,7 +57,7 @@ if __name__ == "__main__":
     y = y.astype(np.int32)
     Xtest = Xtest.astype(theano.config.floatX)
     ytest = ytest.astype(np.int32)
-    lr = LogisticRegression(784, 10, learning_rate=0.001).compile()
+    lr = LogisticRegression(784, 10).compile()
 
     learning_rate = 0.5
     iterations = 1000
