@@ -29,23 +29,23 @@ class Theanifiable(object):
                 obj.set_instance(self)
 
     def compile(self):
-        wut = {}
+        attrs = {}
         for name in dir(self):
             obj = getattr(self, name)
             if isinstance(obj, PreTheano):
                 updates = None
                 if obj.updates:
                     updates = getattr(self, obj.updates)(*obj.args)
-                wut[name] = theano.function(
+                attrs[name] = theano.function(
                     obj.args,
                     obj(*obj.args),
                     updates=updates
                 )
             elif isinstance(obj, T.sharedvar.SharedVariable):
-                wut[name] = obj
+                attrs[name] = obj
             elif hasattr(obj, '__call__'):
-                wut[name] = obj
-        return CompiledTheano(wut)
+                attrs[name] = obj
+        return CompiledTheano(attrs)
 
 class CompiledTheano(object):
     def __init__(self, funcs):

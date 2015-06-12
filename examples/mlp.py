@@ -90,7 +90,7 @@ class MLP(Theanifiable):
 if __name__ == "__main__":
     from mldata import load
     X, y, _, _ = load('mnist', small=1)
-    X, y, Xtest, ytest = load('mnist', subsample=0.5)
+    X, y, Xtest, ytest = load('mnist', subsample=0.7)
     X /= 255.0
     X = X.astype(theano.config.floatX)
     y = y.astype(np.int32)
@@ -100,7 +100,7 @@ if __name__ == "__main__":
     mlp = MLP(784, 100, 10, num_hidden_layers=1).compile()
 
     iterations = 10000
-    learning_rate = 10.0
+    learning_rate = 20.0
 
     batch_size = 500
     for i in xrange(iterations):
