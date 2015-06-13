@@ -18,6 +18,7 @@ class CharacterGenerator(Theanifiable):
 
         self.average_gradient = [theano.shared(p.get_value() * 0) for p in self.parameters()]
         self.average_rms = [theano.shared(p.get_value() * 0) for p in self.parameters()]
+        self.parameter_update = [theano.shared(p.get_value() * 0) for p in self.parameters()]
 
     @theanify(T.tensor3('X'), T.tensor3('Y'))
     def loss(self, X, Y):
@@ -34,28 +35,30 @@ class CharacterGenerator(Theanifiable):
     def sgd(self, X, Y, learning_rate):
         return self.loss(X, Y)
 
-    @theanify(T.tensor3('X'), T.tensor3('Y'), T.dscalar('learning_rate'), updates="sgd_updates")
-    def adadelta(self, X, Y, learning_rate):
+    @theanify(T.tensor3('X'), T.tensor3('Y'), updates="rmsprop_updates")
+    def rmsprop(self, X, Y):
         return self.loss(X, Y)
 
-    def adadelta_updates(self, X, Y, learning_rate):
-        grads = self.gradients(X, y)
+    def rmsprop_updates(self, X, Y):
+        grads = self.gradients(X, Y)
+        next_average_gradient = [0.95 * avg + 0.05 * g for g, avg in zip(grads, self.average_gradient)]
+        next_rms = [0.95 * rms + 0.05 * (g ** 2) for g, rms in zip(grads, self.average_rms)]
+        next_parameter = [0.9 * param_update - 1e-4 * g / T.sqrt(rms - avg ** 2 + 1e-4)
+                          for g, avg, rms, param_update in zip(grads,
+                                                               self.average_gradient,
+                                                               self.average_rms,
+                                                               self.parameter_update)]
 
-        zgup = [(zg, g) for zg, g in zip(zipped_grads, grads)]
-        rg2up = [(rg2, 0.95 * rg2 + 0.05 * (g ** 2))
-                for rg2, g in zip(running_grads2, grads)]
+        average_gradient_update = [(avg, next_avg) for avg, next_avg in zip(self.average_gradient,
+                                                                            next_average_gradient)]
+        rms_update = [(rms, rms2) for rms, rms2 in zip(self.average_rms,
+                                                               next_rms)]
+        next_parameter_update = [(param, param_update) for param, param_update in zip(self.parameter_update,
+                                                                                      next_parameter)]
 
-        f_grad_shared = theano.function([x, mask, y], cost, updates=zgup + rg2up,
-                                        name='adadelta_f_grad_shared')
+        updates = [(p, p + param_update) for p, param_update in zip(self.parameters(), next_parameter)]
 
-        updir = [-tensor.sqrt(ru2 + 1e-6) / tensor.sqrt(rg2 + 1e-6) * zg
-                for zg, ru2, rg2 in zip(zipped_grads,
-                                        running_up2,
-                                        running_grads2)]
-        ru2up = [(ru2, 0.95 * ru2 + 0.05 * (ud ** 2))
-                for ru2, ud in zip(running_up2, updir)]
-        param_up = [(p, p + ud) for p, ud in zip(tparams.values(), updir)]
-        return [(p, p - learning_rate * g) for p, g in zip(self.parameters(), self.gradients(X, Y))]
+        return updates + average_gradient_update + rms_update + next_parameter_update
 
     @theanify(T.tensor3('X'), T.iscalar('length'))
     def generate(self, X, length):
@@ -66,7 +69,7 @@ class CharacterGenerator(Theanifiable):
         H = self.lstm.n_hidden
 
         def step(previous_hidden, previous_state, previous_output):
-            out = theano.printing.Print("Out:")(previous_output.argmax(axis=1))
+            out = previous_output.argmax(axis=1)
             lstm_hidden, state = self.lstm.step(out[:, np.newaxis], previous_hidden, previous_state)
             final_output = self.output.forward(lstm_hidden)
             return lstm_hidden, state, final_output

@@ -124,5 +124,5 @@ if __name__ == "__main__":
     def iterate(num_iterations, lr):
         for i in xrange(num_iterations):
             batch_x, batch_y = batcher.next_batch()
-            print cg.sgd(batch_x, batch_y, lr / (i + 1.0))
+            print cg.rmsprop(batch_x, batch_y)
     iterate(args.iterations, learning_rate)
