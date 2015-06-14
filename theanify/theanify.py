@@ -1,3 +1,4 @@
+import cPickle as pickle
 import theano
 import theano.tensor as T
 
@@ -42,8 +43,6 @@ class Theanifiable(object):
                     updates=updates
                 )
             elif isinstance(obj, T.sharedvar.SharedVariable):
-                attrs[name] = obj
-            elif hasattr(obj, '__call__'):
                 attrs[name] = obj
         return CompiledTheano(attrs)
 

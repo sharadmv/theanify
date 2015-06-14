@@ -2,8 +2,6 @@ import numpy as np
 import theano
 import theano.tensor as T
 
-theano.config.on_unused_input='ignore'
-
 from theanify import theanify, Theanifiable
 
 class MLP(Theanifiable):

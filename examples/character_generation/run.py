@@ -94,8 +94,10 @@ if __name__ == "__main__":
     argparser.add_argument('--batch_size', default=50, type=int)
     argparser.add_argument('--sequence_length', default=50, type=int)
     argparser.add_argument('--hidden_layer_size', default=128, type=int)
+    argparser.add_argument('--num_layers', default=2, type=int)
     argparser.add_argument('--compiled_output', default='cg.pkl')
     argparser.add_argument('--iterations', default=20, type=int)
+    argparser.add_argument('--compile', action='store_true')
 
     args = argparser.parse_args()
     main(args)
@@ -107,22 +109,30 @@ if __name__ == "__main__":
     X = loader.convert_to_tensor(text)
     batcher = Batcher(X, loader.vocab_size())
 
-    if False and Path(args.compiled_output).exists():
+    if not args.compile and Path(args.compiled_output).exists():
         logger.info("Loading LSTM model from file...")
         with open(args.compiled_output, 'rb') as fp:
             cg = pickle.load(fp)
     else:
         logger.info("Compiling LSTM model...")
-        lstm = LSTM(1, args.hidden_layer_size)
+        lstm = LSTM(1, args.hidden_layer_size, num_layers=args.num_layers)
         softmax = Softmax(args.hidden_layer_size, loader.vocab_size())
         cg = CharacterGenerator(lstm, softmax).compile()
-        with open(args.compiled_output, 'wb') as fp:
-            pickle.dump(cg, fp)
+        #with open(args.compiled_output, 'wb') as fp:
+            #pickle.dump(cg, fp)
 
     logger.info("Running SGD")
     learning_rate = 0.1
-    def iterate(num_iterations, lr):
+    N = args.batch_size
+    H = args.hidden_layer_size
+    L = args.num_layers
+    input_state = np.zeros((N, L, H))
+    def iterate(num_iterations, state):
+        losses = []
         for i in xrange(num_iterations):
             batch_x, batch_y = batcher.next_batch()
-            print cg.rmsprop(batch_x, batch_y)
-    iterate(args.iterations, learning_rate)
+            loss, state = cg.rmsprop(batch_x, batch_y, state)
+            losses.append(loss)
+            print loss
+        return state, loss
+    state, l = iterate(args.iterations, input_state)
