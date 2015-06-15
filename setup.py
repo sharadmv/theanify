@@ -1,21 +1,27 @@
-import os
 from setuptools import setup, find_packages
-from pip.req import parse_requirements
-import uuid
 
 setup(
     name = "theanify",
     version = "0.0.1",
     author = "Sharad Vikram",
     author_email = "sharad.vikram@gmail.com",
-    description = "",
+    description = "Allows you to annotate instance methods to be compiled by Theano.",
     license = "MIT",
-    keywords = "",
-    url = "",
+    keywords = "theano",
+    url = "https://github.com/sharadmv/theanify",
+    install_requires=['theano'],
     packages=find_packages(include=[
         'theanify'
     ]),
-    long_description="",
     classifiers=[
-    ],
+    'Development Status :: 3 - Alpha',
+
+    # Indicate who your project is intended for
+    'Intended Audience :: Developers',
+    'Topic :: Software Development :: Build Tools',
+
+     'License :: OSI Approved :: MIT License',
+
+    'Programming Language :: Python :: 2.7',
+],
 )
