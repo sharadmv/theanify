@@ -15,3 +15,9 @@ $ pip install pip setuptools --upgrade
 $ pip install -r requirements.txt
 $ python setup.py develop
 ```
+
+Installation
+-----------------------------------
+```bash
+$ pip install theanify
+```
