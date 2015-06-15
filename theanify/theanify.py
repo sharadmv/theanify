@@ -1,4 +1,8 @@
+import os
 import cPickle as pickle
+import sys
+sys.setrecursionlimit(10000)
+
 import theano
 import theano.tensor as T
 
@@ -29,21 +33,41 @@ class Theanifiable(object):
             if isinstance(obj, PreTheano):
                 obj.set_instance(self)
 
-    def compile(self):
+    def compile(self, cache=None):
+        cache_location = cache
         attrs = {}
+        if cache and os.path.exists(cache):
+            with open(cache, 'rb') as fp:
+                cache = pickle.load(fp)
+        else:
+            cache = {}
+        dirty = False
         for name in dir(self):
             obj = getattr(self, name)
             if isinstance(obj, PreTheano):
                 updates = None
                 if obj.updates:
                     updates = getattr(self, obj.updates)(*obj.args)
-                attrs[name] = theano.function(
-                    obj.args,
-                    obj(*obj.args),
-                    updates=updates
-                )
+                if name in cache:
+                    compiled = cache[name]
+                else:
+                    compiled = theano.function(
+                        obj.args,
+                        obj(*obj.args),
+                        updates=updates
+                    )
+                    cache[name] = compiled
+                    dirty = True
+                attrs[name] = compiled
             elif isinstance(obj, T.sharedvar.SharedVariable):
                 attrs[name] = obj
+            elif callable(obj) and type(obj) != type(all.__call__):
+                attrs[name] = obj
+            elif name[0] != "_":
+                attrs[name] = obj
+        if dirty and cache_location:
+            with open(cache_location, 'wb') as fp:
+                pickle.dump(cache, fp)
         return CompiledTheano(attrs)
 
 class CompiledTheano(object):
