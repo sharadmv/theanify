@@ -59,16 +59,19 @@ class Theanifiable(object):
                     cache[name] = compiled
                     dirty = True
                 attrs[name] = compiled
-            elif isinstance(obj, T.sharedvar.SharedVariable):
-                attrs[name] = obj
-            elif callable(obj) and type(obj) != type(all.__call__):
-                attrs[name] = obj
-            elif name[0] != "_":
-                attrs[name] = obj
+                attrs["_%s" % name] = obj
+            #elif isinstance(obj, T.sharedvar.SharedVariable):
+                #attrs[name] = obj
+            #elif callable(obj) and type(obj) != type(all.__call__):
+                #attrs[name] = obj
+            #elif name[0] != "_":
+                #attrs[name] = obj
         if dirty and cache_location:
             with open(cache_location, 'wb') as fp:
                 pickle.dump(cache, fp)
-        return CompiledTheano(attrs)
+        for attr, obj in attrs.items():
+            setattr(self, attr, obj)
+        return self
 
 class CompiledTheano(object):
     def __init__(self, funcs):

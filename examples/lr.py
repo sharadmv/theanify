@@ -58,6 +58,7 @@ if __name__ == "__main__":
     Xtest = Xtest.astype(theano.config.floatX)
     ytest = ytest.astype(np.int32)
     lr = LogisticRegression(784, 10).compile()
+    raise Exception()
 
     learning_rate = 0.5
     iterations = 1000
