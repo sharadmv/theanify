@@ -55,6 +55,7 @@ class Theanifiable(object):
                         obj.args,
                         obj(*obj.args),
                         updates=updates
+                        allow_input_downcast=True
                     )
                     cache[name] = compiled
                     dirty = True
