@@ -63,7 +63,8 @@ class Theanifiable(object):
                     compiled = theano.function(
                         obj.args,
                         var,
-                        updates=updates
+                        updates=updates,
+                        allow_input_downcast=True
                     )
                     cache[name] = compiled
                     dirty = True
