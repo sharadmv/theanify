@@ -1,10 +1,12 @@
 import numpy as np
 import theano
 import theano.tensor as T
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
-from theanify import theanify, Theanifiable
+from theanify import theanify, compile
 
-class LogisticRegression(Theanifiable):
+class LogisticRegression(object):
 
     def __init__(self, n_input, n_output):
         super(LogisticRegression, self).__init__()
@@ -46,22 +48,37 @@ class LogisticRegression(Theanifiable):
         return [(self.W, g_W), (self.b, g_b)]
 
     @theanify(T.matrix('X'), T.ivector('y'), T.dscalar('learning_rate'), updates="updates")
-    def run(self, X, y, learning_rate):
+    def gradient_descent(self, X, y, learning_rate):
         return self.negative_log_likelihood(X, y)
 
-
 if __name__ == "__main__":
-    from mldata import load
-    X, y, Xtest, ytest = load('mnist', subsample=0.5)
-    X = X.astype(theano.config.floatX)
-    y = y.astype(np.int32)
-    Xtest = Xtest.astype(theano.config.floatX)
-    ytest = ytest.astype(np.int32)
-    lr = LogisticRegression(784, 10).compile()
-    raise Exception()
 
-    learning_rate = 0.5
+    # Creating dataset
+    D, C = 1, 2
+    mu = [0, 1]
+    X, y = [], []
+    np.random.seed(1)
+
+    for i in xrange(1000):
+        yi = np.random.choice([0, 1])
+        y.append(yi)
+        X.append(np.random.normal(loc=mu[yi], scale=0.5))
+
+    X, y = np.vstack(X), np.array(y)
+    X, Xtest = X[:900], X[900:]
+    y, ytest = y[:900], y[900:]
+
+    # Compiling LR
+
+    lr = compile(LogisticRegression(D, C))
+
+    # Training
+    learning_rate = 2.0
     iterations = 1000
     for i in xrange(iterations):
-        print lr.run(X, y, learning_rate / (i + 1))
-    print lr.errors(Xtest, ytest)
+        print "Iteration %u: %f" % (i + 1, lr.gradient_descent(X, y, learning_rate / (i + 1)))
+
+    # Evaluation
+
+    print "Training error:", lr.errors(X, y)
+    print "Test error:", lr.errors(Xtest, ytest)

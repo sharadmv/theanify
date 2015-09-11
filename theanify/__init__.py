@@ -1,1 +1,1 @@
-from theanify import Theanifiable, theanify
+from theanify import compile, theanify

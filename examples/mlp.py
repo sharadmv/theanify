@@ -1,10 +1,12 @@
 import numpy as np
 import theano
 import theano.tensor as T
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
-from theanify import theanify, Theanifiable
+from theanify import theanify, compile
 
-class MLP(Theanifiable):
+class MLP(object):
 
     def __init__(self, n_input, n_hidden, n_output, num_hidden_layers=1):
         super(MLP, self).__init__()
@@ -18,8 +20,9 @@ class MLP(Theanifiable):
         self.Win = theano.shared(np.random.rand(self.n_input, self.n_hidden) - 0.5)
         self.bin = theano.shared(np.random.rand(self.n_hidden) - 0.5)
 
-        self.Wh = theano.shared(np.random.rand(self.num_hidden_layers - 1, self.n_hidden, self.n_hidden) - 0.5)
-        self.bh = theano.shared(np.random.rand(self.num_hidden_layers - 1, self.n_hidden) - 0.5)
+        if num_hidden_layers > 1:
+            self.Wh = theano.shared(np.random.rand(self.num_hidden_layers - 1, self.n_hidden, self.n_hidden) - 0.5)
+            self.bh = theano.shared(np.random.rand(self.num_hidden_layers - 1, self.n_hidden) - 0.5)
 
         self.Wout = theano.shared(np.random.rand(self.n_hidden, self.n_output) - 0.5)
         self.bout = theano.shared(np.random.rand(self.n_output) - 0.5)
@@ -34,7 +37,6 @@ class MLP(Theanifiable):
             out = self.hidden_forward(out, l)
         return self.softmax(out)
 
-    @theanify(T.matrix('X'), T.iscalar())
     def hidden_forward(self, X, l):
         return self.activation(T.dot(X, self.Wh[l, :, :]) + self.bh[l, :])
 
@@ -50,8 +52,8 @@ class MLP(Theanifiable):
     def softmax(self, X):
         return T.nnet.softmax(T.dot(X, self.Wout) + self.bout)
 
-    @theanify(T.matrix('X'), T.ivector('y'), T.dscalar('learning_rate'))
-    def gradients(self, X, y, learning_rate):
+    @theanify(T.matrix('X'), T.ivector('y'))
+    def gradients(self, X, y):
         cost = self.negative_log_likelihood(X, y)
         params = self.get_params()
         gradients = T.grad(cost=cost, wrt=params)
@@ -60,7 +62,7 @@ class MLP(Theanifiable):
     def updates(self, X, y, learning_rate):
         updates = []
         params = self.get_params()
-        gradients = self.gradients(X, y, learning_rate)
+        gradients = self.gradients(X, y)
         for param, gradient in zip(params, gradients):
             updates.append((param, param - learning_rate * gradient))
         return updates
@@ -86,22 +88,35 @@ class MLP(Theanifiable):
         return self.negative_log_likelihood(X, y)
 
 if __name__ == "__main__":
-    from mldata import load
-    X, y, _, _ = load('mnist', small=1)
-    X, y, Xtest, ytest = load('mnist', subsample=0.7)
-    X /= 255.0
-    X = X.astype(theano.config.floatX)
-    y = y.astype(np.int32)
-    Xtest = Xtest.astype(theano.config.floatX)
-    Xtest /= 255.0
-    ytest = ytest.astype(np.int32)
-    mlp = MLP(784, 100, 10, num_hidden_layers=1).compile()
 
-    iterations = 10000
-    learning_rate = 20.0
+    # Creating dataset
+    D, C = 1, 2
+    mu = [0, 1]
+    X, y = [], []
+    np.random.seed(1)
 
-    batch_size = 500
+    for i in xrange(1000):
+        yi = np.random.choice([0, 1])
+        y.append(yi)
+        X.append(np.random.normal(loc=mu[yi], scale=0.5))
+
+    X, y = np.vstack(X), np.array(y)
+    X, Xtest = X[:900], X[900:]
+    y, ytest = y[:900], y[900:]
+
+    mlp = compile(MLP(D, 2, C, num_hidden_layers=1))
+
+    # Training
+
+    iterations = 1000
+    learning_rate = 1.0
+
+    batch_size = 50
     for i in xrange(iterations):
         u = np.random.randint(X.shape[0] - batch_size)
-        print mlp.run(X[u:u+batch_size, :], y[u:u+batch_size], learning_rate / (i + 1))
-    print mlp.errors(Xtest, ytest)
+        print "Iteration %u: %f" % (i + 1, mlp.run(X[u:u+batch_size, :], y[u:u+batch_size], learning_rate / (i + 1)))
+
+    # Evaluation
+
+    print "Training error:", mlp.errors(X, y)
+    print "Test error:", mlp.errors(Xtest, ytest)

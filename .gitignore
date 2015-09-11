@@ -1,0 +1,5 @@
+*.pyc
+build/
+dist/
+venv/
+theanify.egg-info/
