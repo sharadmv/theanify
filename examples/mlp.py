@@ -4,9 +4,9 @@ import theano.tensor as T
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-from theanify import theanify, compile
+from theanify import theanify, Theanifiable
 
-class MLP(object):
+class MLP(Theanifiable):
 
     def __init__(self, n_input, n_hidden, n_output, num_hidden_layers=1):
         super(MLP, self).__init__()
@@ -104,7 +104,7 @@ if __name__ == "__main__":
     X, Xtest = X[:900], X[900:]
     y, ytest = y[:900], y[900:]
 
-    mlp = compile(MLP(D, 2, C, num_hidden_layers=1))
+    mlp = MLP(D, 2, C, num_hidden_layers=1).compile()
 
     # Training
 

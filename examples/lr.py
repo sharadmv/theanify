@@ -4,9 +4,9 @@ import theano.tensor as T
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
-from theanify import theanify, compile
+from theanify import theanify, Theanifiable
 
-class LogisticRegression(object):
+class LogisticRegression(Theanifiable):
 
     def __init__(self, n_input, n_output):
         super(LogisticRegression, self).__init__()
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     # Compiling LR
 
-    lr = compile(LogisticRegression(D, C))
+    lr = LogisticRegression(D, C).compile()
 
     # Training
     learning_rate = 2.0
