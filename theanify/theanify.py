@@ -33,7 +33,7 @@ class Theanifiable(object):
             if isinstance(obj, PreTheano):
                 obj.set_instance(self)
 
-    def compile_method(self, name, args=None):
+    def compile_method(self, name, args=None, set_var=True):
         obj = getattr(self, name)
         args = args or obj.args
         if isinstance(obj, PreTheano):
@@ -51,14 +51,22 @@ class Theanifiable(object):
                 updates=updates,
                 allow_input_downcast=True
             )
-            setattr(self, name, compiled)
-            setattr(self, "_%s" % name, obj)
+            if set_var:
+                setattr(self, name, compiled)
+                setattr(self, "_%s" % name, obj)
+            return compiled
 
     def compile(self):
         logging.info("Compiling <%s> object..." % self.__class__.__name__)
+        attrs = {}
         for name in dir(self):
             obj = getattr(self, name)
             if isinstance(obj, PreTheano):
-                self.compile_method(name)
+                compiled = self.compile_method(name, set_var=False)
+                attrs[name] = compiled
+                attrs["_%s" % name] = obj
+
+        for name, val in attrs.items():
+            setattr(self, name, val)
         logging.info("Done compiling <%s> object." % self.__class__.__name__)
         return self
