@@ -38,12 +38,12 @@ class Theanifiable(object):
         args = args or obj.args
         if isinstance(obj, PreTheano):
             logging.debug("Compiling <%s> method..." % name)
-            updates = None
+            updates = []
             if obj.updates:
                 updates = getattr(self, obj.updates)(*args)
             var = obj(*args)
             if obj.returns_updates:
-                updates = var[1]
+                updates.extend(var[1].items())
                 var = var[0]
             compiled = theano.function(
                 args,
