@@ -2,20 +2,20 @@ from setuptools import setup, find_packages
 
 setup(
     name = "theanify",
-    version = "0.1.12",
+    version = "0.1.13",
     author = "Sharad Vikram",
     author_email = "sharad.vikram@gmail.com",
     description = "Allows you to annotate instance methods to be compiled by Theano.",
     license = "MIT",
     keywords = "theano",
     url = "https://github.com/sharadmv/theanify",
-    install_requires=['theano==0.7.0'],
+    install_requires=['Theano==0.7.0'],
     dependency_links = [
         'git+git://github.com/Theano/Theano.git@0e6e9f5acaa2fd0deb427b3dad7b5a7611e5c8b7#egg=Theano-0.7.0'
     ],
-    packages=find_packages(include=[
+    packages=[
         'theanify'
-    ]),
+    ],
     classifiers=[
     'Development Status :: 3 - Alpha',
 
