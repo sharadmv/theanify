@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name = "theanify",
-    version = "0.1.14",
+    version = "0.1.15",
     author = "Sharad Vikram",
     author_email = "sharad.vikram@gmail.com",
     description = "Allows you to annotate instance methods to be compiled by Theano.",
