@@ -43,7 +43,10 @@ class Theanifiable(object):
                 updates = getattr(self, obj.updates)(*args)
             var = obj(*args)
             if obj.returns_updates:
-                updates.extend(var[1].items())
+                if isinstance(var[1], dict):
+                    updates.extend(var[1].items())
+                else:
+                    updates.extend(var[1])
                 var = var[0]
             compiled = theano.function(
                 args,
